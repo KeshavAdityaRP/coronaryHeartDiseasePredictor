@@ -32,3 +32,7 @@
     background: #4CAF50;
     cursor: pointer;
   }
+
+  .slidecontainer {
+    margin: 0%;
+  }

@@ -1,11 +1,77 @@
 body {
     position: relative; 
     font-family: "Lato", sans-serif;
+    height: 100%;
+    width: 100%;
+    background-color: #edf5e1;
 }
+
+/* background-color: #edf5e1; */
+/* background-color:#5cdb95; */
+
+
+.jumbotron {
+    padding: 2%;
+    border-radius: 0%;
+    background-color:#b7d8d6;
+}
+/* background-color: #05386B; */
+
+h1,h3 {
+    font-family: "Lato", sans-serif;
+    color: #789e9e;
+}
+
+h3 {
+    font-family: "Lato", sans-serif;
+    color: #789e9e;
+    text-align: left;    
+}
+
+.dropdown-header {
+    color: #4d6466;
+}
+
+.briefInfo {
+    text-align: justify;
+    font-size: 18px;
+    font-family: "Lato", sans-serif; 
+    color: #789e9e;   
+    padding: 2%;
+}
+
+.miniInfo {
+    text-align: center;
+    font-size: 14px;
+    font-family: "Lato", sans-serif; 
+    color: #789e9e;      
+}
+
+.task {
+    text-align: center;
+    font-size: 18px;
+    font-family: "Lato", sans-serif; 
+    color: #789e9e;   
+    padding: 2%;
+}
+
+#navigationBar{
+    background-color: #b7d8d6;
+}
+
+.dropdown-item{
+    color: #789e9e;
+}
+
 
 p{
     text-align: center;
     font-size: 15px;
+    font-family: "Lato", sans-serif;
+}
+
+span {
+    font-family: "Lato", sans-serif;
 }
 
 .container {
@@ -92,8 +158,9 @@ label {
     height: 100%;
 }
 
-.bar { 
-    fill: steelblue; 
+.bar {
+    fill: #69b3a2;
+    opacity: 0.9;
 }
 
 .dropdown-menu {
@@ -101,16 +168,21 @@ label {
     top: 0%;
 }
 
+.helper{
+    padding-bottom: 5%;
+}
+
 .barToolTip {
     position: absolute;
     display: none;
+    color: #789e9e;
     min-width: 80px;
     height: auto;
-    background: none repeat scroll 0 0 #ffffff;
-    border: 1px solid #6F257F;
-    padding: 14px;
+    background-color: #b7d8d6;
+    padding: 10px;
     text-align: center;
-  }
+    border-radius: 5px;
+}
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
@@ -123,4 +195,13 @@ input[type=number] {
     -moz-appearance:textfield; /* Firefox */
 }
 
+.dropdown-item.active, .dropdown-item:active {
+    background-color: #4d6466;
+}
+
+#about{
+    height: 100%;
+    background-color: #b7d8d6;
+    padding: 10%;
+}
 
