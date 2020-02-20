@@ -39,7 +39,7 @@ def load_dataset(path):
         output["info"].append(data) 
     return output    
 
-# Client Requests Dataset
+# Respond to Client fetchDataset Requests 
 @app.route('/fetchDataset', methods=['POST'])
 def fetchDataset():
     path = "Dataset/coronaryHeartDiseaseDataset.csv"
