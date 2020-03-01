@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">	
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+		<link href="css/rangeSlider.css" rel="stylesheet">
+		<link href="css/style.css" rel="stylesheet">
+		<title>CSE 564 DATA VISUALIZATION : ASSIGNMENT I</title>		
+	</head>
+	<body data-spy="scroll">
+		<div class="container-fluid">
+			<div class="jumbotron text-center">
+				<h1>Framingham Heart study dataset</h1>      
+				<p class="task">CSE 564 DATA VISUALIZATION : ASSIGNMENT II</p>
+			</div>
+			<div class="row">
+				<div class="col-sm-12 col-md-2 col-lg-2 text-center">
+					<div class="dropdown-menu" id="navigationBar">
+						<h6 class="dropdown-header">Original Dataset</h6>
+						<a id="originalDatasetScreePlot" class="dropdown-item" href="#">Scree Plot Construction</a>
+						<a id="originalDataset2dScatterPlot" class="dropdown-item" href="#">Top Two PCA vectors via 2D Scatterplot</a>
+						<div class="dropdown-divider"></div>
+						<h6 class="dropdown-header">Random Sampled Dataset</h6>
+						<a id="randomSampledDatasetScreePlot" class="dropdown-item" href="#">Scree Plot Construction</a>
+						<a id="randomSampledDataset2dScatterPlot" class="dropdown-item" href="#">Top Two PCA vectors via 2D Scatterplot</a>
+						<div class="dropdown-divider"></div>
+						<h6 class="dropdown-header">Stratified Sampled Dataset</h6>
+						<a id="stratifiedSampledDatasetScreePlot" class="dropdown-item" href="#">Scree Plot Construction</a>
+						<a id="stratifiedSampledDataset2dScatterPlot" class="dropdown-item" href="#">Top Two PCA vectors via 2D Scatterplot</a>
+					</div>
+				</div>
+				<div class="col-sm-12 col-md-8 col-lg-8 text-center" id="graphConntainer">		
+					<div id="graphRender"></div>
+				</div>
+				<div class="col-sm-12 col-md-2 col-lg-2 text-center" id="graphConntainer">		
+					<div id="about">
+						<h3>Some Information Regarding the Dataset !</h3>
+						<p class="briefInfo">The dataset hold patient's information. It includes roughly around 4,000 Records and 15 Attributes. 14 Attributes are potential risk factors and can be used to predict whether the patient has 10-year risk of future Coronary Heart Disease (CHD)</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="https://code.jquery.com/jquery-3.2.1.js" integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous">
+		</script>	
+		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>			
+		<script src="https://d3js.org/d3.v4.js"></script>
+		<script type="text/javascript" src="js/visulization.js"></script>
+	</body>
+</html>

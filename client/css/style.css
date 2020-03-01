@@ -1,0 +1,212 @@
+body {
+    position: relative; 
+    font-family: "Lato", sans-serif;
+    height: 100%;
+    width: 100%;
+    background-color: #edf5e1;
+}
+
+/* background-color: #edf5e1; */
+/* background-color:#5cdb95; */
+
+
+.jumbotron {
+    padding: 2%;
+    border-radius: 0%;
+    background-color:#b7d8d6;
+}
+/* background-color: #05386B; */
+
+h1,h3 {
+    font-family: "Lato", sans-serif;
+    color: #789e9e;
+}
+
+h3 {
+    font-family: "Lato", sans-serif;
+    color: #789e9e;
+    text-align: left;    
+}
+
+.dropdown-header {
+    color: #4d6466;
+}
+
+.briefInfo {
+    text-align: justify;
+    font-size: 18px;
+    font-family: "Lato", sans-serif; 
+    color: #789e9e;   
+    padding: 2%;
+}
+
+.miniInfo {
+    text-align: center;
+    font-size: 14px;
+    font-family: "Lato", sans-serif; 
+    color: #789e9e;      
+}
+
+.task {
+    text-align: center;
+    font-size: 18px;
+    font-family: "Lato", sans-serif; 
+    color: #789e9e;   
+    padding: 2%;
+}
+
+#navigationBar{
+    background-color: #b7d8d6;
+}
+
+.dropdown-item{
+    color: #789e9e;
+}
+
+
+p{
+    text-align: center;
+    font-size: 15px;
+    font-family: "Lato", sans-serif;
+}
+
+span {
+    font-family: "Lato", sans-serif;
+}
+
+.container {
+	padding: 2%;
+}
+
+.row{
+	padding: 1%;
+	margin: 1%;
+}
+
+label {
+    font-weight: normal;
+}
+
+.ct-label {
+    font-size: 12px;
+}
+
+.ct-bar{
+    stroke: #32CD32;    
+}
+
+.enabled-feature{
+    stroke: #32CD32;
+}
+
+.disabled-feature{
+    stroke: grey;
+}
+
+.golden-feature{
+    stroke: rgb(0, 207, 243);
+}
+
+.normal-feature{
+    stroke: #32CD32;    
+}
+
+.hover-on-feature{
+    /* Colour of your bars */
+    stroke: #006400;
+    /* The width of your bars */
+    /* stroke-width: 50px !important; */
+    /* Yes! Dashed bars! */
+    /* stroke-dasharray: 20px; */
+    /* Maybe you like round corners on your bars? */
+    /* stroke-linecap: round; */
+}
+
+.ct-chart .ct-series.ct-series-a .ct-line { 
+    stroke: #32CD32; 
+    stroke-width: 3px; 
+}
+
+.ct-chart .ct-series.ct-series-b .ct-line { 
+    stroke: rgb(0, 207, 243); 
+    stroke-width: 3px; 
+}
+
+/* .ct-chart .ct-series.ct-series-b .ct-line { 
+    stroke: #006400; 
+    stroke-width: 3px; 
+} */
+
+.ct-series.ct-series-a > .ct-circle{
+    fill: #32CD32;
+    stroke-width:5;
+    stroke: #32CD32;
+}
+
+.ct-series.ct-series-b > .ct-circle{
+    fill:  rgb(0, 207, 243);
+    stroke-width:5;
+    stroke:  rgb(0, 207, 243);
+}
+
+.radio-left{
+    text-align: left;
+}
+
+.heat-map{
+    width: 100%;
+    height: 100%;
+}
+
+.bar {
+    fill: #69b3a2;
+    opacity: 0.9;
+}
+
+.dropdown-menu {
+    display: block;
+    top: 0%;
+}
+
+.helper{
+    padding-bottom: 5%;
+}
+
+.barToolTip {
+    position: absolute;
+    display: none;
+    color: #789e9e;
+    min-width: 80px;
+    height: auto;
+    background-color: #b7d8d6;
+    padding: 10px;
+    text-align: center;
+    border-radius: 5px;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type=number] {
+    -moz-appearance:textfield; /* Firefox */
+}
+
+.dropdown-item.active, .dropdown-item:active {
+    background-color: #4d6466;
+}
+
+#about{
+    height: 100%;
+    background-color: #b7d8d6;
+    padding: 10%;
+}
+
+.line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 2px;
+  }
