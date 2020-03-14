@@ -6,8 +6,13 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from scipy.spatial import distance
+from sklearn.manifold import MDS
+import time
 
 app = Flask(__name__)
+
+dataset, datasetRandomSampled, datasetStratified = None, None, None 
 
 def performRandomSampling(dataset):
     count_row = dataset.shape[0]
@@ -102,6 +107,26 @@ def perfromStratifiedSampling(dataset, feature, numberOfCluster):
     dataset = dataset.drop(feature, 1)
     return dataset
 
+def findTheThreeAttributesWithHighestPcaLoadings(values, dataset, title):
+    output = {}
+    output["graph"] = []
+    output["title"] = "Top Three Attributes with Highest PCA Loadings " + title
+    selection = 3
+    values = list(values)
+    setValues = frozenset(values)
+    sortedValues = list(sorted(setValues, reverse=True))
+    topFeturePositions = []
+    for i in range(0,selection):
+        topFeturePositions.append(values.index(sortedValues[i]))
+    # print (topFeturePositions)
+    for _, row in dataset.iterrows():
+        data = {}
+        data[dataset.columns.values[topFeturePositions[0]]] = row[topFeturePositions[0]]
+        data[dataset.columns.values[topFeturePositions[1]]] = row[topFeturePositions[1]]
+        data[dataset.columns.values[topFeturePositions[2]]] = row[topFeturePositions[2]]
+        output["graph"].append(data)
+    return output
+
 def performPCA(dataset, title):
     output1, output2 = {}, {}
     output1["title"] = 'Scree Plot ' + title
@@ -127,6 +152,7 @@ def performPCA(dataset, title):
     # print (eigenValuesPercentages)
     # print (np.sum(eigenValuesPercentages))
     cumulativeSums = calculateCumulativeSum(eigenValuesPercentages)
+    pca1 = abs( pca.components_[0])
     # plt.plot(listOfPrincipalComponents, eigenValuesPercentages, 'bx-')
     # plt.plot(listOfPrincipalComponents, cumulativeSum)
     # plt.xticks(np.arange(0, len(listOfPrincipalComponents) + 1, 1.0))
@@ -141,28 +167,69 @@ def performPCA(dataset, title):
         data["eigenValuePercentage"] = round(eigenValuePercentage, 3)
         data["cumulativeSum"] = round(cumulativeSum,3)
         output1["graph"].append(data)
-    return output1, output2
+    output3 = findTheThreeAttributesWithHighestPcaLoadings(pca1, dataset, title)
+    return output1, output2, output3
 
-    # amount of variance does each PC
-    # print ("amount of variance does each PC == eigen Values Percentages")
-    # print (pca.explained_variance_ratio_)
-    # pca1 = abs( pca.components_[0])
-    # print ("pca.components_= [n_components, n_features]")
-    # print (pca1)
-    # findTheThreeAttributesWithHighestPcaLoadings(pca1, dataset)
+def performDissimilarityMatrixCreation(dataset, dissimilarityType, title):
+    output = {}
+    output["title"] = 'MDS 2D Scatter Plot ' + title
+    output["graph"] = []
+    values = dataset.values
+    dissimilarityMatrix = distance.cdist(values, values, dissimilarityType)
+    embedding = MDS(n_components=2, dissimilarity='precomputed')
+    mdsMatrix = embedding.fit_transform(dissimilarityMatrix)
+    for row in  mdsMatrix:
+        data = {}
+        data["mdsDimensionX"] = row[0]
+        data["mdsDimensionY"] = row[1] 
+        output["graph"].append(data) 
+    return output 
+
+def mdsBasedOnChosenOption(chosenOption):
+    output = {}
+    global dataset, datasetRandomSampled, datasetStratified
+    if chosenOption == "randomSampledDatasetMdsEuclidian":
+        output[chosenOption] = performDissimilarityMatrixCreation(datasetRandomSampled, 'euclidean', 'Using Euclidian For Random Sampled Dataset')
+    elif  chosenOption == "randomSampledDatasetMdsCorrelation":
+        output[chosenOption] = performDissimilarityMatrixCreation(datasetRandomSampled, 'correlation', 'Using Correlation For Random Sampled Dataset')
+    elif  chosenOption == "stratifiedSampledMdsEuclidian":
+        output[chosenOption] = performDissimilarityMatrixCreation(datasetStratified, 'euclidean', 'Using Euclidian For Stratified Sampled Dataset')
+    elif  chosenOption == "stratifiedSampledMdsCorrelation":
+        output[chosenOption] = performDissimilarityMatrixCreation(datasetStratified, 'correlation', 'Using Correlation For Stratified Sampled Dataset')
+    elif  chosenOption == "originalDatasetMdsEuclidian":
+        output[chosenOption] = performDissimilarityMatrixCreation(dataset, 'euclidean', 'Using Euclidian For Original Dataset')
+    elif  chosenOption == "originalDatasetMdsCorrelation":
+        output[chosenOption] = performDissimilarityMatrixCreation(dataset, 'correlation', 'Using Correlation For Original Dataset')
+    return output
+
+# Respond to Client for MSD data Requests
+@app.route('/fetchMdsData', methods=['POST'])
+def fetchMdsData():
+    start = time.time()
+    chosenOption = request.form['chosenOption']
+    print (chosenOption, "Mds Function Request Received")
+    # output["originalDatasetMdsEuclidian"] = performDissimilarityMatrixCreation(dataset, 'euclidean', 'For Original Dataset')
+    output = mdsBasedOnChosenOption(chosenOption)
+    response = jsonify(output)
+    response.headers['Access-Control-Allow-Origin']='*'
+    end = time.time()
+    print (chosenOption, "Mds Function Response Ready - Time Taken : ", end - start)
+    return response
 
 # Respond to Client fetchData Requests 
 @app.route('/fetchData', methods=['POST'])
 def fetchData():
+    global dataset, datasetRandomSampled, datasetStratified
     output = {}
     path = "Dataset/coronaryHeartDiseaseDataset.csv"
     dataset = load_dataset(path)
     datasetRandomSampled = performRandomSampling(dataset)
     datasetAfterKMeans, numberOfCluster = performKMeans(dataset)
     datasetStratified = perfromStratifiedSampling(datasetAfterKMeans, "clusterLabel", numberOfCluster)
-    output["originalDatasetScreePlot"], output["originalDataset2dScatterPlot"] = performPCA(dataset, "For Original Dataset")
-    output["randomSampledDatasetScreePlot"], output["randomSampledDataset2dScatterPlot"] = performPCA(datasetRandomSampled, "For Random Sampled Dataset")
-    output["stratifiedSampledDatasetScreePlot"], output["stratifiedSampledDataset2dScatterPlot"] = performPCA(datasetStratified, "For Stratified Dataset")
+    output["originalDatasetScreePlot"], output["originalDataset2dScatterPlot"], output["originalDatasetTop3Attributes"] = performPCA(dataset, "For Original Dataset")
+    output["randomSampledDatasetScreePlot"], output["randomSampledDataset2dScatterPlot"], output["randomSampledDatasetTop3Attributes"] = performPCA(datasetRandomSampled, "For Random Sampled Dataset")
+    output["stratifiedSampledDatasetScreePlot"], output["stratifiedSampledDataset2dScatterPlot"], output["stratifiedSampledTop3Attributes"] = performPCA(datasetStratified, "For Stratified Dataset")
+    # output["originalDatasetMdsEuclidian"], output["originalDatasetMdsCorrelation"] = performDissimilarityMatrixCreation(dataset, 'euclidean', 'For Original Dataset'), performDissimilarityMatrixCreation(dataset, 'correlation', 'For Original Dataset')
     response = jsonify(output)
     response.headers['Access-Control-Allow-Origin']='*'
     return response

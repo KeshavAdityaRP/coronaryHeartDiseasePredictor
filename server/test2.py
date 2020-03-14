@@ -1,9 +1,12 @@
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
+from scipy.spatial import distance
+from sklearn.manifold import MDS
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import time
 
 def performRandomSampling(dataset):
     count_row = dataset.shape[0]
@@ -76,8 +79,12 @@ def calculateCumulativeSum(percentages):
     return cumulativeSum
 
 def findTheThreeAttributesWithHighestPcaLoadings(values, dataset):
+    output = {}
+    output["graph"] = []
     selection = 3
     values = list(values)
+    print (values)
+    print (dataset.shape)
     setValues = frozenset(values)
     sortedValues = list(sorted(setValues, reverse=True))
     topFeturePositions = []
@@ -85,10 +92,17 @@ def findTheThreeAttributesWithHighestPcaLoadings(values, dataset):
         topFeturePositions.append(values.index(sortedValues[i]))
     print (topFeturePositions)
     # print (dataset.head)
-    topPacLoadingAttributes= {}
-    for position in topFeturePositions:
-        topPacLoadingAttributes[dataset.columns.values[position]] = dataset.iloc[:, [position]].values.T[0]
-    print (topPacLoadingAttributes)
+    # topPacLoadingAttributes= {}
+    # for position in topFeturePositions:
+    #     topPacLoadingAttributes[dataset.columns.values[position]] = dataset.iloc[:, [position]].values.T[0]
+    for _, row in dataset.iterrows():
+        data = {}
+        data[dataset.columns.values[topFeturePositions[0]]] = row[topFeturePositions[0]]
+        data[dataset.columns.values[topFeturePositions[1]]] = row[topFeturePositions[1]]
+        data[dataset.columns.values[topFeturePositions[2]]] = row[topFeturePositions[2]]
+        output["graph"].append(data)
+    # print (topPacLoadingAttributes)
+    return output
     
 
 def performPCA(dataset, title):
@@ -113,7 +127,7 @@ def performPCA(dataset, title):
     plt.xlabel('Principal Component')
     plt.ylabel('Varience Explained')
     plt.title('Scree Plot : ' + title)
-    plt.show() 
+    # plt.show() 
     # amount of variance does each PC
     # print ("amount of variance does each PC == eigen Values Percentages")
     # print (pca.explained_variance_ratio_)
@@ -122,6 +136,31 @@ def performPCA(dataset, title):
     print (pca1)
     findTheThreeAttributesWithHighestPcaLoadings(pca1, dataset)
 
+def performDissimilarityMatrixCreation(dataset, dissimilarityType):
+    start = time.time()
+    # print (dataset.shape)
+    output = {}
+    output["graph"] = []
+    print ("hh")
+    values = dataset.values
+    # print (len(values), len(values[0]))    
+    dissimilarityMatrix = distance.cdist(values, values, dissimilarityType)
+    print ("here")
+    # print (len(dissimilarityMatrix), len(dissimilarityMatrix[0]))
+    embedding = MDS(n_components=2, dissimilarity='precomputed')
+    print ("ll")
+    mdsMatrix = embedding.fit_transform(dissimilarityMatrix) 
+    print ("kk")
+    end = time.time()
+    print(end - start)
+    for row in  mdsMatrix:
+        data = {}
+        data["mdsDimensionX"] = row[0]
+        data["mdsDimensionY"] = row[1] 
+        output["graph"].append(data)
+    print ('lol')  
+    # plt.scatter(mdsMatrix[:,0], mdsMatrix[:,1])
+    # plt.show() 
 
 # Load Dataset
 def load_dataset(path):
@@ -166,9 +205,12 @@ def load_dataset(path):
 path = "Dataset/coronaryHeartDiseaseDataset.csv"
 dataset = load_dataset(path)
 datasetRandomSampled = performRandomSampling(dataset)
+# print (datasetRandomSampled.head)
+# performDissimilarityMatrixCreation(dataset, 'correlation')
+# performDissimilarityMatrixCreation(datasetRandomSampled, 'euclidean')
 # OptimiseKForKMeansByElbowPlot(dataset)
-datasetAfterKMeans, numberOfCluster = performKMeans(dataset)
-datasetStratified = perfromStratifiedSampling(datasetAfterKMeans, "clusterLabel", numberOfCluster)
-performPCA(dataset, "For Original Dataset")
-# performPCA(datasetRandomSampled, "For Random Sampled Dataset")
+# datasetAfterKMeans, numberOfCluster = performKMeans(dataset)
+# datasetStratified = perfromStratifiedSampling(datasetAfterKMeans, "clusterLabel", numberOfCluster)
+# performPCA(dataset, "For Original Dataset")
+performPCA(datasetRandomSampled, "For Random Sampled Dataset")
 # performPCA(datasetStratified, "For Stratified Dataset")
