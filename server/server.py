@@ -118,7 +118,7 @@ def perfromStratifiedSampling(dataset, feature, numberOfCluster):
     # print (dataset.head)
     return dataset
 
-def findTheThreeAttributesWithHighestPcaLoadings(values, dataset, title):
+def findTheThreeAttributesWithHighestPcaLoadings(values, dataset, clusterLabels, title, clusterColors):
     output = {}
     output["graph"] = []
     output["title"] = "Top Three Attributes with Highest PCA Loadings " + title
@@ -129,12 +129,17 @@ def findTheThreeAttributesWithHighestPcaLoadings(values, dataset, title):
     topFeturePositions = []
     for i in range(0,selection):
         topFeturePositions.append(values.index(sortedValues[i]))
-    # print (topFeturePositions)
+    print (title)
+    print (topFeturePositions)
+    count = 0
     for _, row in dataset.iterrows():
         data = {}
         data[dataset.columns.values[topFeturePositions[0]]] = row[topFeturePositions[0]]
         data[dataset.columns.values[topFeturePositions[1]]] = row[topFeturePositions[1]]
         data[dataset.columns.values[topFeturePositions[2]]] = row[topFeturePositions[2]]
+        if clusterLabels is not None:
+            data["clusterLabels"] = clusterColors[clusterLabels[count]]
+            count += 1
         output["graph"].append(data)
     return output
 
@@ -199,7 +204,7 @@ def performPCA(dataset, title, stratifiedFlag=False):
         data["x75"] = round(x75Each,1)
         data["y75"] = round(y75Each,1)
         output1["graph"].append(data)
-    output3 = findTheThreeAttributesWithHighestPcaLoadings(pca1, dataset, title)
+    output3 = findTheThreeAttributesWithHighestPcaLoadings(pca1, dataset, clusterLabels, title, clusterColors)
     return output1, output2, output3
 
 def performDissimilarityMatrixCreation(dataset, dissimilarityType, title):

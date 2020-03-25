@@ -242,7 +242,7 @@ function createScatterPlotMatrix(information) {
     var color = d3.scaleOrdinal(d3.schemeCategory10);
 
     var domainByTrait = {},
-    traits = d3.keys(data[0]).filter(function(d) { return d !== "species"; });
+    traits = d3.keys(data[0]).filter(function(d) { return d !== "clusterLabels"; });
     n = traits.length;
 
     console.log(traits);    
@@ -316,7 +316,7 @@ function createScatterPlotMatrix(information) {
             .attr("cx", function(d) { return x(d[p.x]); })
             .attr("cy", function(d) { return y(d[p.y]); })
             .attr("r", 4)
-            .style("fill", function(d) { return color(d.species); });
+            .style("fill", function(d) { return color(d.clusterLabels); });
     }
 
     var brushCell;
