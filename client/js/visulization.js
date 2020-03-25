@@ -22,11 +22,11 @@ function fetchData() {
         url:server+appdir,
         dataType: 'json'
     }).done(function(fetchDataset) { 
-        fetchMdsData("originalDatasetMdsEuclidian", false);
+        // fetchMdsData("originalDatasetMdsEuclidian", false);
         // fetchMdsData("originalDatasetMdsCorrelation", false);
         console.log("Datset Obtained");
         dataset = fetchDataset;
-        createScreePlot(dataset['originalDatasetScreePlot']);
+        createScreePlot(dataset['originalDatasetScreePlot'], 355);
         // data = dataset;
         console.log(dataset);
         checkWhichOptionIsClickedOn(dataset);
@@ -39,13 +39,13 @@ function toogleBetweenGraphs(chosenOption, dataset) {
         
         // Scree Plot
         case "originalDatasetScreePlot":
-            createScreePlot(dataset['originalDatasetScreePlot']);
+            createScreePlot(dataset['originalDatasetScreePlot'], 355);
             break;
         case "randomSampledDatasetScreePlot":
-            createScreePlot(dataset['randomSampledDatasetScreePlot']);
+            createScreePlot(dataset['randomSampledDatasetScreePlot'], 345);
             break;
         case "stratifiedSampledDatasetScreePlot":
-            createScreePlot(dataset['stratifiedSampledDatasetScreePlot']);
+            createScreePlot(dataset['stratifiedSampledDatasetScreePlot'], 275);
             break;
         
         // 2D Scatter Plot
@@ -56,7 +56,7 @@ function toogleBetweenGraphs(chosenOption, dataset) {
             create2dScatterPlot(dataset['randomSampledDataset2dScatterPlot']);
             break;
         case "stratifiedSampledDataset2dScatterPlot":
-            create2dScatterPlot(dataset['stratifiedSampledDataset2dScatterPlot']);
+            create2dScatterPlot(dataset['stratifiedSampledDataset2dScatterPlot'], true);
             break;
 
         // Mds Euclidian
@@ -94,7 +94,7 @@ function toogleBetweenGraphs(chosenOption, dataset) {
         
         // Default Case
         default:
-            createScreePlot(dataset['originalDatasetScreePlot']);
+            createScreePlot(dataset['originalDatasetScreePlot'], 355);
     }
 }
 
@@ -359,7 +359,7 @@ function createScatterPlotMatrix(information) {
 }
 
 // Create a Scree Plot
-function createScreePlot(information) {   
+function createScreePlot(information, defaultXValue) {   
     console.log(information);
     data = information["graph"];
     
@@ -368,8 +368,8 @@ function createScreePlot(information) {
 
     // set the dimensions and margins of the graph
     var margin = {top: 20, right: 20, bottom: 30, left: 40},
-        width = 960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
+        width = 900 - margin.left - margin.right,
+        height = 700 - margin.top - margin.bottom;
 
     // set the ranges
     var x = d3.scaleBand()
@@ -388,6 +388,14 @@ function createScreePlot(information) {
     var valueline = d3.line()
         .x(function(d) { return x(d.principalComponent); })
         .y(function(d) { return y(d.cumulativeSum); });
+
+    var valuelineX75 = d3.line()
+        .x(function(d) { return (defaultXValue); })
+        .y(function(d) { return y(d.x75); });
+
+    var valuelineY75 = d3.line()
+        .x(function(d) { return (d.y75); })
+        .y(function(d) { return y(75); });
             
     // append the svg object to the body of the page
     // append a 'group' element to 'svg'
@@ -424,6 +432,20 @@ function createScreePlot(information) {
         .attr("class", "line")
         .attr("d", valueline);
 
+    // Add the valuelineX75 path.
+    svg.append("path")
+        .data([data])
+        .attr("class", "line redLine")
+        .attr("stroke", "red")
+        .attr("d", valuelineX75);
+
+    // Add the valuelineY75 path.
+    svg.append("path")
+        .data([data])
+        .attr("stroke", "red")
+        .attr("class", "line redLine")
+        .attr("d", valuelineY75);
+
     // add the x Axis
     svg.append("g")
         .attr("transform", "translate(0," + height + ")")
@@ -456,7 +478,7 @@ function createScreePlot(information) {
         .attr("font-size", "90%"); 
     
     // Add Legend
-    var legend = [{"color" : "#69b3a2", "label" : "Eigen Value Percentage"}, {"color" : "steelblue", "label" : "Cumulative Sum"}];
+    var legend = [{"color" : "#69b3a2", "label" : "Eigen Value Percentage"}, {"color" : "steelblue", "label" : "Cumulative Sum"}, {"color" : "#b7d8d6", "label" : "Possible Threshold 75% of data varience"}];
 
     var margin = 10;
 
@@ -472,7 +494,7 @@ function createScreePlot(information) {
     });
 }
 
-function create2dScatterPlot(information) {
+function create2dScatterPlot(information, strataFlag=false) {
     console.log(information);
     data = information["graph"];
     
@@ -481,8 +503,8 @@ function create2dScatterPlot(information) {
 
     // set the dimensions and margins of the graph
     var margin = {top: 20, right: 20, bottom: 30, left: 40},
-        width = 960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
+        width = 900 - margin.left - margin.right,
+        height = 700 - margin.top - margin.bottom;
 
     // append the svg object to the body of the page
     var svg = d3.select("#graphRender")
@@ -534,6 +556,7 @@ function create2dScatterPlot(information) {
         .domain(["setosa", "versicolor", "virginica" ])
         .range([ "#402D54", "#D18975", "#8FD175"])
 
+    if (strataFlag) {
     // Add dots
     svg.append('g')
         .selectAll("dot")
@@ -543,7 +566,20 @@ function create2dScatterPlot(information) {
         .attr("cx", function (d) { return x(d["principalComponent1"]); } )
         .attr("cy", function (d) { return y(d["principalComponent2"]); } )
         .attr("r", 5)
-        .style("fill", function (d) { return color() } )
+        .style("fill", function (d) { return d["clusterLabel"] } )
+    } else{
+    // Add dots
+    svg.append('g')
+        .selectAll("dot")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("cx", function (d) { return x(d["principalComponent1"]); } )
+        .attr("cy", function (d) { return y(d["principalComponent2"]); } )
+        .attr("r", 5)
+        .style("fill", function (d) { return "#69b3a2" } )
+    }
+
 
 }
 

@@ -9,7 +9,6 @@ body {
 /* background-color: #edf5e1; */
 /* background-color:#5cdb95; */
 
-
 .jumbotron {
     padding: 2%;
     border-radius: 0%;
@@ -255,3 +254,10 @@ fill-opacity: .125;
 stroke: #fff;
 }
   
+svg {
+    padding: 0px;
+}
+
+.redLine {
+    stroke: #b7d8d6;
+}

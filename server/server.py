@@ -9,6 +9,7 @@ import numpy as np
 from scipy.spatial import distance
 from sklearn.manifold import MDS
 import time
+import itertools
 
 app = Flask(__name__)
 
@@ -84,7 +85,9 @@ def load_dataset(path):
 
 def performKMeans(dataset):
     # print (dataset.index)
-    numberOfCluster = 2
+    # print ("GGG")
+    # print (list(dataset.columns.values))
+    numberOfCluster = 9
     dataset_array = dataset.values
     km = KMeans(n_clusters=numberOfCluster)
     km.fit(dataset_array)
@@ -94,17 +97,25 @@ def performKMeans(dataset):
     # results = pd.DataFrame([dataset.index,labels]).T
     # print (results.head)
     dataset = dataset.join(results)
+    # print (dataset.head)
+    # print ("GGG")
+    # print (list(dataset.columns.values))
     # print (dataset.iloc[0])
     return dataset, numberOfCluster   
 
 def perfromStratifiedSampling(dataset, feature, numberOfCluster):
+    # print ("pre")
+    # print (dataset.head)
     count_row = dataset.shape[0]
     numberOfSamplesNeededFromDataset = int(0.25 * count_row)
     numberOfSamplesNeededFromEachStrata = int(numberOfSamplesNeededFromDataset / numberOfCluster)
     dataset = dataset.groupby(feature, group_keys=False).apply(lambda x: x.sample(min(len(x), numberOfSamplesNeededFromEachStrata)))
     # print (dataset.shape[0])
     # print (dataset[feature].value_counts())
-    dataset = dataset.drop(feature, 1)
+    # dataset = dataset.drop(feature, 1)
+    # print ("lol")
+    # print ("post")
+    # print (dataset.head)
     return dataset
 
 def findTheThreeAttributesWithHighestPcaLoadings(values, dataset, title):
@@ -127,7 +138,15 @@ def findTheThreeAttributesWithHighestPcaLoadings(values, dataset, title):
         output["graph"].append(data)
     return output
 
-def performPCA(dataset, title):
+def performPCA(dataset, title, stratifiedFlag=False):
+    # dataset = datasetWithClusterLabel.copy()
+    clusterLabels = None
+    if stratifiedFlag:
+        clusterLabels = dataset[["clusterLabel"]].to_numpy()
+        flatten = itertools.chain.from_iterable
+        clusterLabels = list(flatten(clusterLabels))
+        # print (clusterLabels)
+        dataset = dataset.drop("clusterLabel", 1)
     output1, output2 = {}, {}
     output1["title"] = 'Scree Plot ' + title
     output2["title"] = 'Top 2 PCA Vectors Scatter Plot'
@@ -138,10 +157,18 @@ def performPCA(dataset, title):
     dataset_array = dataset.values
     pca = PCA(n_components=count_columns)
     principalComponents_x = pca.fit_transform(dataset_array)
+    count = 0
+    clusterColors = ["gold", "blue", "green", "yellow", "slateblue", "grey", "orange", "pink", "brown"]
+    # if stratifiedFlag:
+    #     print (len(principalComponents_x))
+    #     print (len(clusterLabels))
     for principalComponents in principalComponents_x:
         data = {}
         data["principalComponent1"] = principalComponents[0]
         data["principalComponent2"] = principalComponents[1]
+        if stratifiedFlag:
+            data["clusterLabel"] = clusterColors[clusterLabels[count]]
+            count += 1
         output2["graph"].append(data)
     eigenValues = pca.explained_variance_
     # print ("eigen values aka intrinsic dimensionality - Explanied Varience")
@@ -161,11 +188,16 @@ def performPCA(dataset, title):
     # plt.ylabel('Varience Explained')
     # plt.title('Scree Plot : ' + title)
     # plt.show() 
-    for principalComponent, eigenValuePercentage, cumulativeSum in zip(listOfPrincipalComponents, eigenValuesPercentages, cumulativeSums):
+    lengthOfListOfPrincipalComponents = len(listOfPrincipalComponents)
+    x75 = list(np.linspace(0,100,lengthOfListOfPrincipalComponents))
+    y75 = list(np.linspace(1, 800,lengthOfListOfPrincipalComponents))
+    for principalComponent, eigenValuePercentage, cumulativeSum, x75Each, y75Each in zip(listOfPrincipalComponents, eigenValuesPercentages, cumulativeSums, x75, y75):
         data = {}
         data["principalComponent"] = principalComponent
         data["eigenValuePercentage"] = round(eigenValuePercentage, 3)
         data["cumulativeSum"] = round(cumulativeSum,3)
+        data["x75"] = round(x75Each,1)
+        data["y75"] = round(y75Each,1)
         output1["graph"].append(data)
     output3 = findTheThreeAttributesWithHighestPcaLoadings(pca1, dataset, title)
     return output1, output2, output3
@@ -225,10 +257,12 @@ def fetchData():
     dataset = load_dataset(path)
     datasetRandomSampled = performRandomSampling(dataset)
     datasetAfterKMeans, numberOfCluster = performKMeans(dataset)
+    # print ("GGG")
+    # print (list(datasetAfterKMeans.columns.values))
     datasetStratified = perfromStratifiedSampling(datasetAfterKMeans, "clusterLabel", numberOfCluster)
     output["originalDatasetScreePlot"], output["originalDataset2dScatterPlot"], output["originalDatasetTop3Attributes"] = performPCA(dataset, "For Original Dataset")
     output["randomSampledDatasetScreePlot"], output["randomSampledDataset2dScatterPlot"], output["randomSampledDatasetTop3Attributes"] = performPCA(datasetRandomSampled, "For Random Sampled Dataset")
-    output["stratifiedSampledDatasetScreePlot"], output["stratifiedSampledDataset2dScatterPlot"], output["stratifiedSampledTop3Attributes"] = performPCA(datasetStratified, "For Stratified Dataset")
+    output["stratifiedSampledDatasetScreePlot"], output["stratifiedSampledDataset2dScatterPlot"], output["stratifiedSampledTop3Attributes"] = performPCA(datasetStratified, "For Stratified Dataset", True)
     # output["originalDatasetMdsEuclidian"], output["originalDatasetMdsCorrelation"] = performDissimilarityMatrixCreation(dataset, 'euclidean', 'For Original Dataset'), performDissimilarityMatrixCreation(dataset, 'correlation', 'For Original Dataset')
     response = jsonify(output)
     response.headers['Access-Control-Allow-Origin']='*'

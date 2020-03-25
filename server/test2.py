@@ -33,7 +33,7 @@ def performStandardisation(dataset):
 def OptimiseKForKMeansByElbowPlot(dataset):
     dataset_array = dataset.values
     sumOfSquaredDistances = []
-    K = range(1,11)
+    K = range(1,30)
     for k in K:
         km = KMeans(n_clusters=k)
         km = km.fit(dataset_array)
@@ -208,9 +208,9 @@ datasetRandomSampled = performRandomSampling(dataset)
 # print (datasetRandomSampled.head)
 # performDissimilarityMatrixCreation(dataset, 'correlation')
 # performDissimilarityMatrixCreation(datasetRandomSampled, 'euclidean')
-# OptimiseKForKMeansByElbowPlot(dataset)
+OptimiseKForKMeansByElbowPlot(dataset)
 # datasetAfterKMeans, numberOfCluster = performKMeans(dataset)
 # datasetStratified = perfromStratifiedSampling(datasetAfterKMeans, "clusterLabel", numberOfCluster)
 # performPCA(dataset, "For Original Dataset")
-performPCA(datasetRandomSampled, "For Random Sampled Dataset")
+# performPCA(datasetRandomSampled, "For Random Sampled Dataset")
 # performPCA(datasetStratified, "For Stratified Dataset")
