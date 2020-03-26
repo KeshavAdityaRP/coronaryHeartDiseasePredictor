@@ -1,5 +1,6 @@
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 from sklearn.cluster import KMeans
 from scipy.spatial import distance
 from sklearn.manifold import MDS
@@ -47,7 +48,7 @@ def OptimiseKForKMeansByElbowPlot(dataset):
 
 def performKMeans(dataset):
     # print (dataset.index)
-    numberOfCluster = 2
+    numberOfCluster = 9
     dataset_array = dataset.values
     km = KMeans(n_clusters=numberOfCluster)
     km.fit(dataset_array)
@@ -61,12 +62,16 @@ def performKMeans(dataset):
     return dataset, numberOfCluster
 
 def perfromStratifiedSampling(dataset, feature, numberOfCluster):
-    count_row = dataset.shape[0]
-    numberOfSamplesNeededFromDataset = int(0.25 * count_row)
-    numberOfSamplesNeededFromEachStrata = int(numberOfSamplesNeededFromDataset / numberOfCluster)
-    dataset = dataset.groupby(feature, group_keys=False).apply(lambda x: x.sample(min(len(x), numberOfSamplesNeededFromEachStrata)))
+    print ('pre')
+    print (dataset[feature].value_counts())
+    # count_row = dataset.shape[0]
+    # numberOfSamplesNeededFromDataset = int(0.25 * count_row)
+    # numberOfSamplesNeededFromEachStrata = int(numberOfSamplesNeededFromDataset / numberOfCluster)
+    # dataset = dataset.groupby(feature, group_keys=False).apply(lambda x: x.sample(min(len(x), numberOfSamplesNeededFromEachStrata)))
+    dataset, _ = train_test_split(dataset, train_size = 0.25, stratify=dataset[feature])
     # print (dataset.shape[0])
-    # print (dataset[feature].value_counts())
+    print ('post')
+    print (dataset[feature].value_counts())
     dataset = dataset.drop(feature, 1)
     return dataset
 
@@ -103,7 +108,33 @@ def findTheThreeAttributesWithHighestPcaLoadings(values, dataset):
         output["graph"].append(data)
     # print (topPacLoadingAttributes)
     return output
-    
+
+def findTop3(pca, dataset):
+    print (list(dataset.columns.values))
+    print ("Loading")
+    selection = 3
+    loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
+    # print (len(loadings), len(loadings[0]))
+    sumOfSquaredLoading = []
+    for loading in loadings:
+        loading = [i**2 for i in loading]
+        sumOfSquaredLoading.append(sum(loading))
+    print (sumOfSquaredLoading)
+    setValues = frozenset(sumOfSquaredLoading)
+    sortedValues = list(sorted(setValues, reverse=True))
+    topFeturePositions = []
+    for i in range(0,selection):
+        topFeturePositions.append(sumOfSquaredLoading.index(sortedValues[i]))
+    print (topFeturePositions)
+    for _, row in dataset.iterrows():
+        data = {}
+        data[dataset.columns.values[topFeturePositions[0]]] = row[topFeturePositions[0]]
+        data[dataset.columns.values[topFeturePositions[1]]] = row[topFeturePositions[1]]
+        data[dataset.columns.values[topFeturePositions[2]]] = row[topFeturePositions[2]]
+        output["graph"].append(data)
+    # print (topPacLoadingAttributes)
+    return output
+
 
 def performPCA(dataset, title):
     count_columns = dataset.shape[1]
@@ -134,7 +165,8 @@ def performPCA(dataset, title):
     pca1 = abs( pca.components_[0])
     print ("pca.components_= [n_components, n_features]")
     print (pca1)
-    findTheThreeAttributesWithHighestPcaLoadings(pca1, dataset)
+    findTop3(pca, dataset)
+    # findTheThreeAttributesWithHighestPcaLoadings(pca1, dataset)
 
 def performDissimilarityMatrixCreation(dataset, dissimilarityType):
     start = time.time()
@@ -208,9 +240,9 @@ datasetRandomSampled = performRandomSampling(dataset)
 # print (datasetRandomSampled.head)
 # performDissimilarityMatrixCreation(dataset, 'correlation')
 # performDissimilarityMatrixCreation(datasetRandomSampled, 'euclidean')
-OptimiseKForKMeansByElbowPlot(dataset)
+# OptimiseKForKMeansByElbowPlot(dataset)
 # datasetAfterKMeans, numberOfCluster = performKMeans(dataset)
 # datasetStratified = perfromStratifiedSampling(datasetAfterKMeans, "clusterLabel", numberOfCluster)
 # performPCA(dataset, "For Original Dataset")
-# performPCA(datasetRandomSampled, "For Random Sampled Dataset")
+performPCA(datasetRandomSampled, "For Random Sampled Dataset")
 # performPCA(datasetStratified, "For Stratified Dataset")

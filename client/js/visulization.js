@@ -45,7 +45,7 @@ function toogleBetweenGraphs(chosenOption, dataset) {
             createScreePlot(dataset['randomSampledDatasetScreePlot'], 345);
             break;
         case "stratifiedSampledDatasetScreePlot":
-            createScreePlot(dataset['stratifiedSampledDatasetScreePlot'], 275);
+            createScreePlot(dataset['stratifiedSampledDatasetScreePlot'], 347);
             break;
         
         // 2D Scatter Plot
@@ -61,24 +61,26 @@ function toogleBetweenGraphs(chosenOption, dataset) {
 
         // Mds Euclidian
         case "originalDatasetMdsEuclidian":
-            handleForOriginalMds(chosenOption);
+            // handleForOriginalMds(chosenOption);
+            fetchMdsData(chosenOption);
             break;
         case "randomSampledDatasetMdsEuclidian":
             fetchMdsData(chosenOption);
             break;
         case "stratifiedSampledMdsEuclidian":
-            fetchMdsData(chosenOption);
+            fetchMdsData(chosenOption, true, true);
             break;
 
         // Mds Correlation
         case "originalDatasetMdsCorrelation":
-            handleForOriginalMds(chosenOption);
+            // handleForOriginalMds(chosenOption);
+            fetchMdsData(chosenOption);
             break;
         case "randomSampledDatasetMdsCorrelation":
             fetchMdsData(chosenOption);
             break;
         case "stratifiedSampledMdsCorrelation":
-            fetchMdsData(chosenOption);
+            fetchMdsData(chosenOption, true, true);
             break;
 
         // Top Three Attributes
@@ -89,7 +91,7 @@ function toogleBetweenGraphs(chosenOption, dataset) {
             createScatterPlotMatrix(dataset['randomSampledDatasetTop3Attributes']);
             break;
         case "stratifiedSampledTop3Attributes":
-            createScatterPlotMatrix(dataset['stratifiedSampledTop3Attributes']);
+            createScatterPlotMatrix(dataset['stratifiedSampledTop3Attributes'], true);
             break;
         
         // Default Case
@@ -106,9 +108,9 @@ function handleForOriginalMds(chosenOption) {
     }    
 }
 
-function fetchMdsData(chosenOption, flag=true) {
+function fetchMdsData(chosenOption, flag=true, strataFlag=false) {
     if (chosenOption in dataset) {
-        createMdsScatterPlot(dataset[chosenOption]);
+        createMdsScatterPlot(dataset[chosenOption], strataFlag);
     } else{
         // data: {json_str: JSON.stringify(formData)}
         var appdir='/fetchMdsData';
@@ -123,7 +125,7 @@ function fetchMdsData(chosenOption, flag=true) {
             console.log("Print");
             console.log(dataset[chosenOption]);
             if (chosenOption == currentMenuSelection) {
-                createMdsScatterPlot(dataset[chosenOption]);
+                createMdsScatterPlot(dataset[chosenOption], strataFlag);
             }
         });
         if (flag) {
@@ -139,7 +141,9 @@ function displayLoading() {
     $("#graphRender").append("<h1>Loading ...</h1>" );
 }
 
-function createMdsScatterPlot(information) {
+function createMdsScatterPlot(information, strataFlag=false) {
+    console.log("Called");
+    console.log(strataFlag);
     console.log(information);
     data = information["graph"];
     
@@ -201,19 +205,49 @@ function createMdsScatterPlot(information) {
         .domain(["setosa", "versicolor", "virginica" ])
         .range([ "#402D54", "#D18975", "#8FD175"])
 
-    // Add dots
-    svg.append('g')
-        .selectAll("dot")
-        .data(data)
-        .enter()
-        .append("circle")
-        .attr("cx", function (d) { return x(d["mdsDimensionX"]); } )
-        .attr("cy", function (d) { return y(d["mdsDimensionY"]); } )
-        .attr("r", 5)
-        .style("fill", function (d) { return color() } )
+    if (strataFlag) {
+        // Add dots
+        svg.append('g')
+            .selectAll("dot")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("cx", function (d) { return x(d["mdsDimensionX"]); } )
+            .attr("cy", function (d) { return y(d["mdsDimensionY"]); } )
+            .attr("r", 5)
+            .style("fill", function (d) { return d["clusterLabels"] } )
+
+        // Add Legend
+        var legend = [{"color" : "gold", "label" : "Cluster 1"}, {"color" : "blue", "label" : "Cluster 2"}, {"color" : "green", "label" : "Cluster 3"}, {"color" : "yellow", "label" : "Cluster 4"}, {"color" : "slateblue", "label" : "Cluster 5"}, {"color" : "grey", "label" : "Cluster 6"}, {"color" : "orange", "label" : "Cluster 7"}, {"color" : "pink", "label" : "Cluster 8"}, {"color" : "brown", "label" : "Cluster 9"}];
+
+        var margin = 10;
+
+        svg.selectAll("g.legend").data(legend).enter().append("g")
+        .attr("class", "legend").attr("transform", function(d,i) {
+            return "translate(" + margin + "," + (margin + i*20) + ")";
+        }).each(function(d, i) {
+            d3.select(this).append("rect").attr("width", 30).attr("height", 15)
+            .attr("fill", d.color);
+            d3.select(this).append("text").attr("text-anchor", "start")
+            .attr("x", 30+10).attr("y", 15/2).attr("dy", "0.35em")
+            .text(d.label);
+        });
+    } else{
+        // Add dots
+        svg.append('g')
+            .selectAll("dot")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("cx", function (d) { return x(d["mdsDimensionX"]); } )
+            .attr("cy", function (d) { return y(d["mdsDimensionY"]); } )
+            .attr("r", 5)
+            .style("fill", function (d) { return "#69b3a2" } )
+    }
+
 }
 
-function createScatterPlotMatrix(information) {
+function createScatterPlotMatrix(information, strataFlag=false) {
     console.log(information);
     data = information["graph"];
     
@@ -280,6 +314,24 @@ function createScatterPlotMatrix(information) {
         .attr("class", "y axis")
         .attr("transform", function(d, i) { return "translate(0," + i * size + ")"; })
         .each(function(d) { y.domain(domainByTrait[d]); d3.select(this).call(yAxis); });
+
+    if (strataFlag) {
+        // Add Legend
+        var legend = [{"color" : "gold", "label" : "Cluster 1"}, {"color" : "blue", "label" : "Cluster 2"}, {"color" : "green", "label" : "Cluster 3"}, {"color" : "yellow", "label" : "Cluster 4"}, {"color" : "slateblue", "label" : "Cluster 5"}, {"color" : "grey", "label" : "Cluster 6"}, {"color" : "orange", "label" : "Cluster 7"}, {"color" : "pink", "label" : "Cluster 8"}, {"color" : "brown", "label" : "Cluster 9"}];
+
+        var margin = 10;
+
+        svg.selectAll("g.legend").data(legend).enter().append("g")
+        .attr("class", "legend").attr("transform", function(d,i) {
+            return "translate(" + margin + "," + (margin + i*20) + ")";
+        }).each(function(d, i) {
+            d3.select(this).append("rect").attr("width", 30).attr("height", 15)
+            .attr("fill", d.color);
+            d3.select(this).append("text").attr("text-anchor", "start")
+            .attr("x", 30+10).attr("y", 15/2).attr("dy", "0.35em")
+            .text(d.label);
+        });
+    }
 
     var cell = svg.selectAll(".cell")
         .data(cross(traits, traits))
@@ -557,16 +609,33 @@ function create2dScatterPlot(information, strataFlag=false) {
         .range([ "#402D54", "#D18975", "#8FD175"])
 
     if (strataFlag) {
-    // Add dots
-    svg.append('g')
-        .selectAll("dot")
-        .data(data)
-        .enter()
-        .append("circle")
-        .attr("cx", function (d) { return x(d["principalComponent1"]); } )
-        .attr("cy", function (d) { return y(d["principalComponent2"]); } )
-        .attr("r", 5)
-        .style("fill", function (d) { return d["clusterLabel"] } )
+        // Add dots
+        svg.append('g')
+            .selectAll("dot")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("cx", function (d) { return x(d["principalComponent1"]); } )
+            .attr("cy", function (d) { return y(d["principalComponent2"]); } )
+            .attr("r", 5)
+            .style("fill", function (d) { return d["clusterLabel"] } )
+
+        // Add Legend
+        var legend = [{"color" : "gold", "label" : "Cluster 1"}, {"color" : "blue", "label" : "Cluster 2"}, {"color" : "green", "label" : "Cluster 3"}, {"color" : "yellow", "label" : "Cluster 4"}, {"color" : "slateblue", "label" : "Cluster 5"}, {"color" : "grey", "label" : "Cluster 6"}, {"color" : "orange", "label" : "Cluster 7"}, {"color" : "pink", "label" : "Cluster 8"}, {"color" : "brown", "label" : "Cluster 9"}];
+
+        var margin = 10;
+
+        svg.selectAll("g.legend").data(legend).enter().append("g")
+        .attr("class", "legend").attr("transform", function(d,i) {
+            return "translate(" + margin + "," + (margin + i*20) + ")";
+        }).each(function(d, i) {
+            d3.select(this).append("rect").attr("width", 30).attr("height", 15)
+            .attr("fill", d.color);
+            d3.select(this).append("text").attr("text-anchor", "start")
+            .attr("x", 30+10).attr("y", 15/2).attr("dy", "0.35em")
+            .text(d.label);
+        });
+
     } else{
     // Add dots
     svg.append('g')

@@ -8,12 +8,15 @@ import pandas as pd
 import numpy as np
 from scipy.spatial import distance
 from sklearn.manifold import MDS
+from sklearn.model_selection import train_test_split
 import time
 import itertools
 
 app = Flask(__name__)
 
 dataset, datasetRandomSampled, datasetStratified = None, None, None 
+clusterColors = ["gold", "blue", "green", "yellow", "slateblue", "grey", "orange", "pink", "brown"]
+clusterLabels = None
 
 def performRandomSampling(dataset):
     count_row = dataset.shape[0]
@@ -106,19 +109,22 @@ def performKMeans(dataset):
 def perfromStratifiedSampling(dataset, feature, numberOfCluster):
     # print ("pre")
     # print (dataset.head)
-    count_row = dataset.shape[0]
-    numberOfSamplesNeededFromDataset = int(0.25 * count_row)
-    numberOfSamplesNeededFromEachStrata = int(numberOfSamplesNeededFromDataset / numberOfCluster)
-    dataset = dataset.groupby(feature, group_keys=False).apply(lambda x: x.sample(min(len(x), numberOfSamplesNeededFromEachStrata)))
+    # count_row = dataset.shape[0]
+    # numberOfSamplesNeededFromDataset = int(0.25 * count_row)
+    # numberOfSamplesNeededFromEachStrata = int(numberOfSamplesNeededFromDataset / numberOfCluster)
+    # dataset = dataset.groupby(feature, group_keys=False).apply(lambda x: x.sample(min(len(x), numberOfSamplesNeededFromEachStrata)))
     # print (dataset.shape[0])
     # print (dataset[feature].value_counts())
+    dataset, _ = train_test_split(dataset, train_size = 0.25, stratify=dataset[feature])
+    print (dataset[feature].value_counts())
     # dataset = dataset.drop(feature, 1)
     # print ("lol")
     # print ("post")
     # print (dataset.head)
     return dataset
 
-def findTheThreeAttributesWithHighestPcaLoadings(values, dataset, clusterLabels, title, clusterColors):
+def findTheThreeAttributesWithHighestPcaLoadings(values, dataset, title, stratifiedFlag):
+    global clusterColors, clusterLabels
     output = {}
     output["graph"] = []
     output["title"] = "Top Three Attributes with Highest PCA Loadings " + title
@@ -137,15 +143,48 @@ def findTheThreeAttributesWithHighestPcaLoadings(values, dataset, clusterLabels,
         data[dataset.columns.values[topFeturePositions[0]]] = row[topFeturePositions[0]]
         data[dataset.columns.values[topFeturePositions[1]]] = row[topFeturePositions[1]]
         data[dataset.columns.values[topFeturePositions[2]]] = row[topFeturePositions[2]]
-        if clusterLabels is not None:
+        if stratifiedFlag:
             data["clusterLabels"] = clusterColors[clusterLabels[count]]
             count += 1
         output["graph"].append(data)
     return output
 
+def findTop3(pca, dataset, title, stratifiedFlag):
+    global clusterColors, clusterLabels
+    output = {}
+    output["graph"] = []
+    output["title"] = "Top Three Attributes with Highest PCA Loadings " + title
+    selection = 3
+    loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
+    # print (len(loadings), len(loadings[0]))
+    sumOfSquaredLoading = []
+    for loading in loadings:
+        loading = [i**2 for i in loading]
+        sumOfSquaredLoading.append(sum(loading))
+    # print (sumOfSquaredLoading)
+    setValues = frozenset(sumOfSquaredLoading)
+    sortedValues = list(sorted(setValues, reverse=True))
+    topFeturePositions = []
+    for i in range(0,selection):
+        topFeturePositions.append(sumOfSquaredLoading.index(sortedValues[i]))
+    print (title)
+    print (topFeturePositions)
+    count = 0
+    for _, row in dataset.iterrows():
+        data = {}
+        data[dataset.columns.values[topFeturePositions[0]]] = row[topFeturePositions[0]]
+        data[dataset.columns.values[topFeturePositions[1]]] = row[topFeturePositions[1]]
+        data[dataset.columns.values[topFeturePositions[2]]] = row[topFeturePositions[2]]
+        if stratifiedFlag:
+            data["clusterLabels"] = clusterColors[clusterLabels[count]]
+            count += 1
+        output["graph"].append(data)
+    # print (topPacLoadingAttributes)
+    return output
+
 def performPCA(dataset, title, stratifiedFlag=False):
     # dataset = datasetWithClusterLabel.copy()
-    clusterLabels = None
+    global clusterColors, clusterLabels
     if stratifiedFlag:
         clusterLabels = dataset[["clusterLabel"]].to_numpy()
         flatten = itertools.chain.from_iterable
@@ -163,7 +202,6 @@ def performPCA(dataset, title, stratifiedFlag=False):
     pca = PCA(n_components=count_columns)
     principalComponents_x = pca.fit_transform(dataset_array)
     count = 0
-    clusterColors = ["gold", "blue", "green", "yellow", "slateblue", "grey", "orange", "pink", "brown"]
     # if stratifiedFlag:
     #     print (len(principalComponents_x))
     #     print (len(clusterLabels))
@@ -204,10 +242,12 @@ def performPCA(dataset, title, stratifiedFlag=False):
         data["x75"] = round(x75Each,1)
         data["y75"] = round(y75Each,1)
         output1["graph"].append(data)
-    output3 = findTheThreeAttributesWithHighestPcaLoadings(pca1, dataset, clusterLabels, title, clusterColors)
+    # output3 = findTheThreeAttributesWithHighestPcaLoadings(pca1, dataset, title, stratifiedFlag)
+    output3 = findTop3(pca, dataset, title, stratifiedFlag)
     return output1, output2, output3
 
-def performDissimilarityMatrixCreation(dataset, dissimilarityType, title):
+def performDissimilarityMatrixCreation(dataset, dissimilarityType, title, stratifiedFlag):
+    global clusterColors, clusterLabels
     output = {}
     output["title"] = 'MDS 2D Scatter Plot ' + title
     output["graph"] = []
@@ -215,10 +255,16 @@ def performDissimilarityMatrixCreation(dataset, dissimilarityType, title):
     dissimilarityMatrix = distance.cdist(values, values, dissimilarityType)
     embedding = MDS(n_components=2, dissimilarity='precomputed')
     mdsMatrix = embedding.fit_transform(dissimilarityMatrix)
+    print (len(mdsMatrix))
+    print (len(clusterLabels))
+    count = 0
     for row in  mdsMatrix:
         data = {}
         data["mdsDimensionX"] = row[0]
         data["mdsDimensionY"] = row[1] 
+        if stratifiedFlag:
+            data["clusterLabels"] = clusterColors[clusterLabels[count]]
+            count += 1   
         output["graph"].append(data) 
     return output 
 
@@ -226,17 +272,17 @@ def mdsBasedOnChosenOption(chosenOption):
     output = {}
     global dataset, datasetRandomSampled, datasetStratified
     if chosenOption == "randomSampledDatasetMdsEuclidian":
-        output[chosenOption] = performDissimilarityMatrixCreation(datasetRandomSampled, 'euclidean', 'Using Euclidian For Random Sampled Dataset')
+        output[chosenOption] = performDissimilarityMatrixCreation(datasetRandomSampled, 'euclidean', 'Using Euclidian For Random Sampled Dataset', False)
     elif  chosenOption == "randomSampledDatasetMdsCorrelation":
-        output[chosenOption] = performDissimilarityMatrixCreation(datasetRandomSampled, 'correlation', 'Using Correlation For Random Sampled Dataset')
+        output[chosenOption] = performDissimilarityMatrixCreation(datasetRandomSampled, 'correlation', 'Using Correlation For Random Sampled Dataset', False)
     elif  chosenOption == "stratifiedSampledMdsEuclidian":
-        output[chosenOption] = performDissimilarityMatrixCreation(datasetStratified, 'euclidean', 'Using Euclidian For Stratified Sampled Dataset')
+        output[chosenOption] = performDissimilarityMatrixCreation(datasetStratified, 'euclidean', 'Using Euclidian For Stratified Sampled Dataset', True)
     elif  chosenOption == "stratifiedSampledMdsCorrelation":
-        output[chosenOption] = performDissimilarityMatrixCreation(datasetStratified, 'correlation', 'Using Correlation For Stratified Sampled Dataset')
+        output[chosenOption] = performDissimilarityMatrixCreation(datasetStratified, 'correlation', 'Using Correlation For Stratified Sampled Dataset', True)
     elif  chosenOption == "originalDatasetMdsEuclidian":
-        output[chosenOption] = performDissimilarityMatrixCreation(dataset, 'euclidean', 'Using Euclidian For Original Dataset')
+        output[chosenOption] = performDissimilarityMatrixCreation(dataset, 'euclidean', 'Using Euclidian For Original Dataset', False)
     elif  chosenOption == "originalDatasetMdsCorrelation":
-        output[chosenOption] = performDissimilarityMatrixCreation(dataset, 'correlation', 'Using Correlation For Original Dataset')
+        output[chosenOption] = performDissimilarityMatrixCreation(dataset, 'correlation', 'Using Correlation For Original Dataset', False)
     return output
 
 # Respond to Client for MSD data Requests
