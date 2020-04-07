@@ -3,10 +3,10 @@ import json
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-from scipy.spatial import distance
+# from scipy.spatial import distance
 from sklearn.manifold import MDS
 from sklearn.model_selection import train_test_split
 from sklearn.metrics.pairwise import pairwise_distances
