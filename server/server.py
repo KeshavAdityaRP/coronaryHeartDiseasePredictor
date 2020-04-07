@@ -9,6 +9,7 @@ import numpy as np
 from scipy.spatial import distance
 from sklearn.manifold import MDS
 from sklearn.model_selection import train_test_split
+from sklearn.metrics.pairwise import pairwise_distances
 import time
 import itertools
 
@@ -252,7 +253,8 @@ def performDissimilarityMatrixCreation(dataset, dissimilarityType, title, strati
     output["title"] = 'MDS 2D Scatter Plot ' + title
     output["graph"] = []
     values = dataset.values
-    dissimilarityMatrix = distance.cdist(values, values, dissimilarityType)
+    dissimilarityMatrix = pairwise_distances(values, metric=dissimilarityType)
+    # dissimilarityMatrix = distance.cdist(values, values, dissimilarityType)
     embedding = MDS(n_components=2, dissimilarity='precomputed')
     mdsMatrix = embedding.fit_transform(dissimilarityMatrix)
     print (len(mdsMatrix))
